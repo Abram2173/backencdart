@@ -29,6 +29,8 @@ INSTALLED_APPS = [
     'documents',               # Tu app de docs
 ]
 
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # CORS primero
     'django.middleware.security.SecurityMiddleware',
@@ -38,6 +40,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Nuevo: sirve static
 ]
 
 ROOT_URLCONF = 'docagil.urls'
