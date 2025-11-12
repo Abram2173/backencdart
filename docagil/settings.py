@@ -94,6 +94,8 @@ REST_FRAMEWORK = {
 
 # CORS para tu frontend React (ajusta puerto si usas otro)
 CORS_ALLOWED_ORIGINS = [
+    'https://backencdart-production.up.railway.app',  # Tu domain exacto
+    'https://*.up.railway.app',  # Wildcard para subdomains
     "http://localhost:5173",  # Vite dev server
 ]
 CORS_ALLOW_CREDENTIALS = True
@@ -107,6 +109,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'  # Para collectstatic en prod
+
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
