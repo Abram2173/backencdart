@@ -1,0 +1,275 @@
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
+from rest_framework.parsers import MultiPartParser, FormParser
+from django.contrib.auth import authenticate
+from django.utils import timezone
+from .serializers import LoginSerializer, RegisterSerializer
+from .models import User
+from documents.models import DocumentFlow, Report
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_view(request):
+    serializer = LoginSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.validated_data['user']
+        token, _ = Token.objects.get_or_create(user=user)
+        role = user.role if user.role else user.detect_role_from_username()
+        return Response({
+            'token': token.key,
+            'role': role,
+            'user_id': user.id
+        })
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register_view(request):
+    serializer = RegisterSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.save()
+        role = request.data.get('role', 'solicitante')
+        user.role = role
+        user.save(update_fields=['role'])
+        return Response({
+            'message': 'Solicitud enviada. Espera aprobación del admin.',
+            'user_id': user.id
+        }, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Admin Views (intacto)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def usuarios_view(request):
+    if request.user.role != 'admin':
+        return Response({'error': 'Acceso denegado solo para admins'}, status=status.HTTP_403_FORBIDDEN)
+    users = User.objects.all().values('id', 'full_name', 'email', 'role', 'is_approved')
+    for user in users:
+        user['estado'] = 'Activo' if user['is_approved'] else 'Pendiente'
+    return Response(list(users))
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def approve_user_view(request, pk):
+    if request.user.role != 'admin':
+        return Response({'error': 'Acceso denegado solo para admins'}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        user = User.objects.get(id=pk)
+        user.is_approved = True
+        user.save()
+        return Response({'message': 'Usuario aprobado'})
+    except User.DoesNotExist:
+        return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def reportes_view(request):
+    if request.user.role != 'admin':
+        return Response({'error': 'Acceso denegado solo para admins'}, status=status.HTTP_403_FORBIDDEN)
+    reports = Report.objects.all()
+    data = [{'id': r.id, 'titulo': r.titulo, 'fecha': str(r.fecha), 'tipo': r.tipo, 'status': r.status} for r in reports]
+    return Response(data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def kpis_view(request):
+    if request.user.role != 'admin':
+        return Response({'error': 'Acceso denegado solo para admins'}, status=status.HTTP_403_FORBIDDEN)
+    total_users = User.objects.count()
+    total_docs = DocumentFlow.objects.count()
+    return Response({
+        'usuarios': total_users,
+        'documentos': total_docs,
+        'tiempo': "2.1 días",
+        'cumplimiento': "98.5%"
+    })
+
+# Solicitante Views (intacto)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def solicitante_tramites_view(request):
+    if request.user.role != 'solicitante':
+        return Response({'error': 'Acceso denegado solo para solicitantes'}, status=status.HTTP_403_FORBIDDEN)
+    tramites = DocumentFlow.objects.filter(created_by=request.user)
+    data = [
+        {
+            'id': t.id,
+            'titulo': t.nombre,
+            'descripcion': t.descripcion,
+            'tipo': t.etapa,
+            'estado': t.status,
+            'fecha': t.created_at.strftime('%Y-%m-%d'),
+            'qr': t.folio,
+            'progreso': 25
+        } for t in tramites
+    ]
+    return Response(data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def solicitante_create_tramite(request):
+    if request.user.role != 'solicitante':
+        return Response({'error': 'Acceso denegado solo para solicitantes'}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        titulo = request.data.get('titulo', '').strip()
+        tipo = request.data.get('tipo', '1')
+        contenido = request.data.get('contenido', '').strip()
+        folio = request.data.get('folio', f"SOL-{request.user.id}-{timezone.now().strftime('%H%M%S')}")
+
+        if not titulo or not contenido:
+            return Response({'error': 'Faltan título y descripción'}, status=status.HTTP_400_BAD_REQUEST)
+
+        new_tramite = DocumentFlow.objects.create(
+            nombre=titulo,
+            descripcion=contenido,
+            folio=folio,
+            etapa=tipo,
+            created_by=request.user,
+            status='Pendiente'
+        )
+
+        if 'archivo' in request.FILES:
+            archivo = request.FILES['archivo']
+            new_tramite.archivo = archivo
+            new_tramite.save()
+
+        return Response({
+            'message': 'Trámite creado exitosamente',
+            'id': new_tramite.id,
+            'folio': new_tramite.folio
+        })
+    except Exception as e:
+        return Response({'error': f'Error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def solicitante_notificaciones_view(request):
+    if request.user.role != 'solicitante':
+        return Response({'error': 'Acceso denegado'}, status=status.HTTP_403_FORBIDDEN)
+    data = [
+        {'id': 1, 'tipo': 'success', 'mensaje': 'Tu trámite fue aprobado', 'folio': 'FOL-001', 'fecha': '2025-11-10'},
+        {'id': 2, 'tipo': 'warning', 'mensaje': 'Trámite en revisión', 'folio': 'FOL-002', 'fecha': '2025-11-09'}
+    ]
+    return Response(data)
+
+# Aprobador Views (intacto)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def aprobador_pendientes_view(request):
+    if request.user.role != 'aprobador':
+        return Response({'error': 'Acceso denegado solo para aprobadores'}, status=status.HTTP_403_FORBIDDEN)
+    tramites = DocumentFlow.objects.filter(status='Pendiente')
+    data = [
+        {
+            'id': t.id,
+            'folio': t.folio,
+            'titulo': t.nombre,
+            'tipo': t.etapa,
+            'solicitante': t.created_by.username,
+            'estado': t.status
+        } for t in tramites
+    ]
+    return Response(data)
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def aprobador_approve_tramite(request, pk):
+    if request.user.role != 'aprobador':
+        return Response({'error': 'Acceso denegado solo para aprobadores'}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        tramite = DocumentFlow.objects.get(id=pk)
+        tramite.status = 'Aprobado'
+        tramite.save()
+        return Response({'message': 'Trámite aprobado'})
+    except DocumentFlow.DoesNotExist:
+        return Response({'error': 'Trámite no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def aprobador_reject_tramite(request, pk):
+    if request.user.role != 'aprobador':
+        return Response({'error': 'Acceso denegado solo para aprobadores'}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        tramite = DocumentFlow.objects.get(id=pk)
+        tramite.status = 'Rechazado'
+        tramite.save()
+        return Response({'message': 'Trámite rechazado'})
+    except DocumentFlow.DoesNotExist:
+        return Response({'error': 'Trámite no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def aprobador_historial_view(request):
+    if request.user.role != 'aprobador':
+        return Response({'error': 'Acceso denegado solo para aprobadores'}, status=status.HTTP_403_FORBIDDEN)
+    tramites = DocumentFlow.objects.filter(status__in=['Aprobado', 'Rechazado'])
+    data = [
+        {
+            'id': t.id,
+            'folio': t.folio,
+            'titulo': t.nombre,
+            'tipo': t.etapa,
+            'solicitante': t.created_by.username,
+            'estado': t.status
+        } for t in tramites
+    ]
+    return Response(data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def aprobador_bitacora_view(request):
+    if request.user.role != 'aprobador':
+        return Response({'error': 'Acceso denegado solo para aprobadores'}, status=status.HTTP_403_FORBIDDEN)
+    data = [
+        {'id': 1, 'action': 'Aprobado trámite FOL-001', 'user': 'aprobador', 'time': '2025-11-10 10:00'},
+        {'id': 2, 'action': 'Rechazado trámite FOL-002', 'user': 'aprobador', 'time': '2025-11-10 09:30'}
+    ]
+    return Response(data)
+
+# ← NUEVAS VIEWS PARA AUDITOR (agrega después de aprobador_bitacora_view)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def auditor_kpis_view(request):
+    if request.user.role != 'auditor':
+        return Response({'error': 'Acceso denegado solo para auditores'}, status=status.HTTP_403_FORBIDDEN)
+    total_auditados = DocumentFlow.objects.filter(status='Auditado').count()
+    total_no_conformes = DocumentFlow.objects.filter(status='No Conforme').count()
+    total_documentos = DocumentFlow.objects.count()
+    return Response({
+        'tiempo': total_auditados,  # Placeholder para tiempo
+        'rechazos': total_no_conformes,
+        'documentos': total_documentos
+    })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def auditor_reportes_view(request):
+    if request.user.role != 'auditor':
+        return Response({'error': 'Acceso denegado solo para auditores'}, status=status.HTTP_403_FORBIDDEN)
+    reports = Report.objects.all()
+    data = [
+        {
+            'id': r.id,
+            'titulo': r.titulo,
+            'fecha': str(r.fecha),
+            'tipo': r.tipo,
+            'qr': r.id  # Placeholder para QR
+        } for r in reports
+    ]
+    return Response(data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def auditor_bitacora_view(request):
+    if request.user.role != 'auditor':
+        return Response({'error': 'Acceso denegado solo para auditores'}, status=status.HTTP_403_FORBIDDEN)
+    # Placeholder – hardcoded, crea model si quieres real
+    data = [
+        {'id': 1, 'action': 'Auditado trámite FOL-001', 'user': 'auditor', 'time': '2025-11-10 11:00'},
+        {'id': 2, 'action': 'No conforme trámite FOL-002', 'user': 'auditor', 'time': '2025-11-10 10:30'}
+    ]
+    return Response(data)

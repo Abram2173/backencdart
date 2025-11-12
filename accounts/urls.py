@@ -1,0 +1,26 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('login/', views.login_view, name='login'),
+    path('register/', views.register_view, name='register'),
+    # Admin
+    path('usuarios/', views.usuarios_view, name='usuarios'),
+    path('users/<int:pk>/approve/', views.approve_user_view, name='approve_user'),
+    path('reportes/', views.reportes_view, name='reportes'),
+    path('kpis/', views.kpis_view, name='kpis'),
+    # Solicitante
+    path('tramites/', views.solicitante_tramites_view, name='solicitante_tramites'),
+    path('create-tramite/', views.solicitante_create_tramite, name='solicitante_create_tramite'),
+    path('notificaciones/', views.solicitante_notificaciones_view, name='solicitante_notificaciones'),
+    # Aprobador
+    path('pendientes/', views.aprobador_pendientes_view, name='aprobador_pendientes'),
+    path('tramite/<int:pk>/approve/', views.aprobador_approve_tramite, name='approve_tramite'),
+    path('tramite/<int:pk>/reject/', views.aprobador_reject_tramite, name='reject_tramite'),
+    path('historial/', views.aprobador_historial_view, name='aprobador_historial'),
+    path('bitacora/', views.aprobador_bitacora_view, name='aprobador_bitacora'),
+    # Auditor (paths exactos para frontend)
+    path('kpis/', views.auditor_kpis_view, name='auditor_kpis'),
+    path('reportes/', views.auditor_reportes_view, name='auditor_reportes'),
+    path('bitacora/', views.auditor_bitacora_view, name='auditor_bitacora'),
+]
