@@ -94,8 +94,6 @@ REST_FRAMEWORK = {
 
 # CORS para tu frontend React (ajusta puerto si usas otro)
 CORS_ALLOWED_ORIGINS = [
-    'https://backencdart-production.up.railway.app',  # Tu domain exacto
-    'https://*.up.railway.app',  # Wildcard para subdomains
     "http://localhost:5173",  # Vite dev server
 ]
 CORS_ALLOW_CREDENTIALS = True
@@ -137,3 +135,8 @@ USE_TZ = True
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://backencdart-production.up.railway.app',
+    'https://*.up.railway.app',  # Wildcard Railway
+]
