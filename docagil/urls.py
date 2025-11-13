@@ -2,7 +2,8 @@ from django.http import HttpResponse
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from backend.accounts import admin
+from django.contrib import admin  # Este es el main admin.site
+
 
 def home(request):
     return HttpResponse("¡Bienvenido a Docagil Backend! API en /api/, Admin en /admin/.")
