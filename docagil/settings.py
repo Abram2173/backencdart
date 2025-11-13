@@ -105,8 +105,10 @@ REST_FRAMEWORK = {
 
 # CORS para tu frontend React (ajusta puerto si usas otro)
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vite dev server
-]
+    "http://localhost:5173",  # Local Vite
+    "https://abram2173.github.io",  # Tu GitHub Pages domain (ajusta si es subpath como /docagilsw)
+    "https://backencdart.onrender.com",  # Backend mismo domain si hace falta
+    ]
 CORS_ALLOW_CREDENTIALS = True
 
 # User custom
