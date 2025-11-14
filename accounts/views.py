@@ -273,3 +273,27 @@ def auditor_bitacora_view(request):
         {'id': 2, 'action': 'No conforme trámite FOL-002', 'user': 'auditor', 'time': '2025-11-10 10:30'}
     ]
     return Response(data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def usuarios_view(request):
+    if request.user.role not in ['admin', 'auditor']: # ← FIX: Permite auditor
+        return Response({'error': 'Acceso denegado solo para admins/auditores'}, status=status.HTTP_403_FORBIDDEN)
+    users = User.objects.all().values('id', 'full_name', 'email', 'role', 'is_approved')
+    return Response(users)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def kpis_view(request):
+    if request.user.role not in ['admin', 'auditor']:  # ← FIX: Permite auditor
+        return Response({'error': 'Acceso denegado solo para admins/auditores'}, status=status.HTTP_403_FORBIDDEN)
+    # Tu lógica KPIs
+    return Response({'usuarios': User.objects.count(), 'documentos': DocumentFlow.objects.count()})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def reportes_view(request):
+    if request.user.role not in ['admin', 'auditor']:  # ← FIX: Permite auditor
+        return Response({'error': 'Acceso denegado solo para admins/auditores'}, status=status.HTTP_403_FORBIDDEN)
+    # Tu lógica reportes
+    return Response([]) 
