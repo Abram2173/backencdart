@@ -21,7 +21,8 @@ def login_view(request):
         return Response({
             'token': token.key,
             'role': role,
-            'user_id': user.id
+            'user_id': user.id,
+            'full_name': user.full_name
         })
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
