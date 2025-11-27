@@ -23,4 +23,7 @@ urlpatterns = [
     path('kpis/', views.auditor_kpis_view, name='auditor_kpis'),
     path('reportes/', views.auditor_reportes_view, name='auditor_reportes'),
     path('bitacora/', views.auditor_bitacora_view, name='auditor_bitacora'),
+    # accounts/urls.py → AGREGA AL FINAL
+path('gestor/subir/', views.gestor_subir_documento, name='gestor_subir'),
+path('gestor/catalogo/', views.gestor_catalogo, name='gestor_catalogo'),
 ]

@@ -298,3 +298,54 @@ def reportes_view(request):
         return Response({'error': 'Acceso denegado solo para admins/auditores'}, status=status.HTTP_403_FORBIDDEN)
     # Tu lógica reportes
     return Response([]) 
+
+# GESTOR DOCUMENTAL - ENDPOINTS REALES
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def gestor_subir_documento(request):
+    if request.user.role not in ['gestor', 'admin']:
+        return Response({'error': 'Solo el Gestor Documental puede subir documentos'}, status=403)
+
+    from documents.models import DocumentFlow  # Asegúrate que exista
+    titulo = request.data.get('titulo')
+    codigo = request.data.get('codigo')
+    tipo = request.data.get('tipo')
+    archivo = request.FILES.get('archivo')
+
+    if not all([titulo, codigo, tipo]):
+        return Response({'error': 'Faltan datos'}, status=400)
+
+    # Crea documento oficial (puedes usar DocumentFlow o crear uno nuevo)
+    doc = DocumentFlow.objects.create(
+        nombre=titulo,
+        folio=codigo,
+        descripcion=f"Documento oficial tipo: {tipo}",
+        created_by=request.user,
+        status="En revisión",
+        archivo=archivo if archivo else None
+    )
+
+    return Response({
+        'message': 'Documento oficial subido y enviado a aprobación',
+        'folio': doc.folio,
+        'titulo': doc.nombre,
+        'estado': doc.status
+    }, status=201)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def gestor_catalogo(request):
+    if request.user.role not in ['gestor', 'admin']:
+        return Response({'error': 'Acceso denegado'}, status=403)
+
+    docs = DocumentFlow.objects.filter(created_by__role__in=['gestor', 'admin'])
+    data = [{
+        'id': d.id,
+        'folio': d.folio,
+        'titulo': d.nombre,
+        'estado': d.status,
+        'fecha': d.created_at.strftime('%Y-%m-%d')
+    } for d in docs]
+
+    return Response(data)

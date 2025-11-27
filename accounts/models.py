@@ -6,6 +6,7 @@ class User(AbstractUser):
         ('solicitante', 'Solicitante'),
         ('aprobador', 'Aprobador'),
         ('auditor', 'Auditor'),
+        ('gestor', 'Gestor Documental'),   # ← AÑADE ESTA LÍNEA
         ('admin', 'Admin'),
     ]
     full_name = models.CharField(max_length=255, blank=True)
@@ -26,4 +27,5 @@ def detect_role_from_username(self):
     if 'auditor' in lower: return 'auditor'
     if 'admin' in lower: return 'admin'
     if 'solicitante' in lower: return 'solicitante'
+    if 'gestor' in lower: return'gestor'
     return self.role  # ← FIX: Fallback al role del model (registrado)
