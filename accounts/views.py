@@ -34,7 +34,7 @@ def register_view(request):
         user = serializer.save()
         role = request.data.get('role', 'solicitante')
         user.role = role
-        user.is_approved = False   # ← AQUÍ ESTÁ LA CLAVE
+        user.is_approved = False   # ← AÑADE ESTA LÍNEA
         user.save()
         return Response({
             'message': 'Solicitud enviada. Espera aprobación del admin.',
