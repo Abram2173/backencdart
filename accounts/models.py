@@ -6,10 +6,13 @@ class User(AbstractUser):
         ('solicitante', 'Solicitante'),
         ('aprobador', 'Aprobador'),
         ('auditor', 'Auditor'),
-        ('gestor', 'Gestor Documental'),   # ← AÑADE ESTA LÍNEA
-        ('director', 'Dirección'),
+        ('gestor', 'Gestor Documental'),
+        ('coordinador', 'Coordinador'),      # ← NUEVO
+        ('subdirector', 'Subdirector'),      # ← NUEVO
+        ('director', 'Director'),            # ← NUEVO
         ('admin', 'Admin'),
     ]
+    
     full_name = models.CharField(max_length=255, blank=True)
     phone = models.CharField(max_length=20, blank=True)
     department = models.CharField(max_length=255, blank=True)
@@ -22,11 +25,13 @@ class User(AbstractUser):
             raise ValueError("Email institucional requerido")
         super().save(*args, **kwargs)
 
-def detect_role_from_username(self):
-    lower = self.username.lower()
-    if 'aprobador' in lower: return 'aprobador'
-    if 'auditor' in lower: return 'auditor'
-    if 'admin' in lower: return 'admin'
-    if 'solicitante' in lower: return 'solicitante'
-    if 'gestor' in lower: return'gestor'
-    return self.role  # ← FIX: Fallback al role del model (registrado)
+    def detect_role_from_username(self):
+        lower = self.username.lower()
+        if 'director' in lower: return 'director'
+        if 'subdirector' in lower: return 'subdirector'
+        if 'coordinador' in lower: return 'coordinador'
+        if 'gestor' in lower: return 'gestor'
+        if 'aprobador' in lower: return 'aprobador'
+        if 'auditor' in lower: return 'auditor'
+        if 'admin' in lower: return 'admin'
+        return self.role

@@ -9,42 +9,22 @@ from django.utils import timezone
 from .serializers import LoginSerializer, RegisterSerializer
 from .models import User
 from documents.models import DocumentFlow, Report
-from django.db.models import Q   # ← ESTA ES LA QUE FALTABA
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
-    identifier = request.data.get('username')  # ← puede ser username o email
-    password = request.data.get('password')
-
-    if not identifier or not password:
-        return Response({"detail": "Faltan credenciales"}, status=400)
-
-    # ← BUSCA POR USERNAME O POR EMAIL
-    user = User.objects.filter(
-        Q(username=identifier) | Q(email=identifier)
-    ).first()
-
-    if not user:
-        return Response({"detail": "Credenciales incorrectas"}, status=400)
-
-    if not user.check_password(password):
-        return Response({"detail": "Credenciales incorrectas"}, status=400)
-
-    # ← VERIFICA SI ESTÁ APROBADO
-    if not user.is_approved:
-        return Response({"detail": "Tu cuenta está pendiente de aprobación por el administrador."}, status=403)
-
-    # ← TOKEN Y DATOS
-    token, _ = Token.objects.get_or_create(user=user)
-    role = user.role if user.role else user.detect_role_from_username()
-
-    return Response({
-        'token': token.key,
-        'role': role,
-        'user_id': user.id,
-        'full_name': user.full_name or user.username,
-    })
+    serializer = LoginSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.validated_data['user']
+        token, _ = Token.objects.get_or_create(user=user)
+        role = user.role if user.role else user.detect_role_from_username()
+        return Response({
+            'token': token.key,
+            'role': role,
+            'user_id': user.id,
+            'full_name': user.full_name
+        })
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
