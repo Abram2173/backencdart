@@ -7,6 +7,7 @@ class User(AbstractUser):
         ('aprobador', 'Aprobador'),
         ('auditor', 'Auditor'),
         ('gestor', 'Gestor Documental'),   # ← AÑADE ESTA LÍNEA
+        ('director', 'Dirección'),
         ('admin', 'Admin'),
     ]
     full_name = models.CharField(max_length=255, blank=True)
