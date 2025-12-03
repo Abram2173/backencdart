@@ -10,33 +10,22 @@ from .serializers import LoginSerializer, RegisterSerializer
 from .models import User
 from documents.models import DocumentFlow, Report
 
-# 1. LOGIN - BLOQUEA USUARIOS NO APROBADOS (LO MÁS IMPORTANTE)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
     serializer = LoginSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.validated_data['user']
-        
-        # ← ESTO ES LA CLAVE: NO DEJA ENTRAR SI NO ESTÁ APROBADO
-        if not user.is_approved:
-            return Response({
-                'detail': 'Tu cuenta está pendiente de aprobación por el administrador.'
-            }, status=status.HTTP_403_FORBIDDEN)
-        
         token, _ = Token.objects.get_or_create(user=user)
         role = user.role if user.role else user.detect_role_from_username()
-        
         return Response({
             'token': token.key,
             'role': role,
             'user_id': user.id,
-            'full_name': user.full_name or user.username
+            'full_name': user.full_name
         })
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-# 2. REGISTRO - GUARDA EL ROL CORRECTO
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_view(request):
@@ -45,14 +34,12 @@ def register_view(request):
         user = serializer.save()
         role = request.data.get('role', 'solicitante')
         user.role = role
-        user.is_approved = False  # ← PENDIENTE DE APROBACIÓN
+        user.is_approved = False   # ← AÑADE ESTA LÍNEA
         user.save()
-        
         return Response({
-            'message': 'Solicitud enviada con éxito. Espera aprobación del administrador.',
+            'message': 'Solicitud enviada. Espera aprobación del admin.',
             'user_id': user.id
         }, status=status.HTTP_201_CREATED)
-    
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Admin Views (intacto)
@@ -313,35 +300,37 @@ def reportes_view(request):
     # Tu lógica reportes
     return Response([]) 
 
-# 3. SUBIR DOCUMENTO - ARREGLADO Y FUNCIONANDO
+# GESTOR DOCUMENTAL - ENDPOINTS REALES
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-@parser_classes([MultiPartParser, FormParser])
 def gestor_subir_documento(request):
-    if request.user.role not in ['gestor', 'admin', 'director']:
-        return Response({'error': 'No tienes permiso para subir documentos'}, status=403)
+    if request.user.role not in ['gestor', 'admin']:
+        return Response({'error': 'Solo el Gestor Documental puede subir documentos'}, status=403)
 
+    from documents.models import DocumentFlow  # Asegúrate que exista
     titulo = request.data.get('titulo')
     codigo = request.data.get('codigo')
     tipo = request.data.get('tipo')
     archivo = request.FILES.get('archivo')
 
     if not all([titulo, codigo, tipo]):
-        return Response({'error': 'Faltan datos obligatorios'}, status=400)
+        return Response({'error': 'Faltan datos'}, status=400)
 
+    # Crea documento oficial (puedes usar DocumentFlow o crear uno nuevo)
     doc = DocumentFlow.objects.create(
         nombre=titulo,
         folio=codigo,
-        descripcion=f"Documento tipo: {tipo}",
+        descripcion=f"Documento oficial tipo: {tipo}",
         created_by=request.user,
         status="En revisión",
-        archivo=archivo
+        archivo=archivo if archivo else None
     )
 
     return Response({
-        'message': 'Documento subido y enviado a aprobación',
+        'message': 'Documento oficial subido y enviado a aprobación',
         'folio': doc.folio,
-        'titulo': doc.nombre
+        'titulo': doc.nombre,
+        'estado': doc.status
     }, status=201)
 
 
