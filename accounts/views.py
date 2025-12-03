@@ -350,3 +350,53 @@ def gestor_catalogo(request):
     } for d in docs]
 
     return Response(data)
+
+from .permissions import RolePermission
+
+# ← DIRECTOR (solo director)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, RolePermission(['director'])])
+def director_view(request):
+    return Response({"message": "Bienvenido Director", "data": "reportes globales"})
+
+# ← SUBDIRECTOR
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, RolePermission(['subdirector'])])
+def subdirector_view(request):
+    return Response({"message": "Bienvenido Subdirector"})
+
+# ← GESTOR
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated, RolePermission(['gestor'])])
+def gestor_view(request):
+    return Response({"message": "Gestor Documental"})
+
+# ← COORDINADOR
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, RolePermission(['coordinador'])])
+def coordinador_view(request):
+    return Response({"message": "Coordinador / Oficina"})
+
+# ← APROBADOR
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, RolePermission(['aprobador'])])
+def aprobador_view(request):
+    return Response({"message": "Revisor / Aprobador"})
+
+# ← ESTUDIANTE
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, RolePermission(['solicitante'])])
+def solicitante_view(request):
+    return Response({"message": "Estudiante"})
+
+# ← AUDITOR
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, RolePermission(['auditor'])])
+def auditor_view(request):
+    return Response({"message": "Auditor Interno"})
+
+# ← ADMIN
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, RolePermission(['admin'])])
+def admin_view(request):
+    return Response({"message": "Administrador del Sistema"})
