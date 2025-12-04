@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate
 from django.utils import timezone
 from .serializers import LoginSerializer, RegisterSerializer
 from .models import User
-from documents.models import DocumentFlow, Report
+from documents.models import DocumentFlow
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -71,8 +71,19 @@ def approve_user_view(request, pk):
 def reportes_view(request):
     if request.user.role != 'admin':
         return Response({'error': 'Acceso denegado solo para admins'}, status=status.HTTP_403_FORBIDDEN)
-    reports = Report.objects.all()
-    data = [{'id': r.id, 'titulo': r.titulo, 'fecha': str(r.fecha), 'tipo': r.tipo, 'status': r.status} for r in reports]
+    
+    # ← AHORA USA DocumentFlow EN VEZ DE Report
+    docs = DocumentFlow.objects.all().order_by('-created_at')
+    data = [{
+        'id': d.id,
+        'folio': d.folio,
+        'titulo': d.nombre,
+        'tipo': d.etapa,
+        'fecha': d.created_at.strftime('%Y-%m-%d'),
+        'status': d.status,
+        'usuario': d.created_by.get_full_name() or d.created_by.username
+    } for d in docs]
+    
     return Response(data)
 
 @api_view(['GET'])
@@ -257,7 +268,7 @@ def auditor_kpis_view(request):
 def auditor_reportes_view(request):
     if request.user.role != 'auditor':
         return Response({'error': 'Acceso denegado solo para auditores'}, status=status.HTTP_403_FORBIDDEN)
-    reports = Report.objects.all()
+    reports = DocumentFlow.objects.all()
     data = [
         {
             'id': r.id,
