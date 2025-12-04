@@ -105,20 +105,22 @@ def kpis_view(request):
 @permission_classes([IsAuthenticated])
 def solicitante_tramites_view(request):
     if request.user.role != 'solicitante':
-        return Response({'error': 'Acceso denegado solo para solicitantes'}, status=status.HTTP_403_FORBIDDEN)
-    tramites = DocumentFlow.objects.filter(created_by=request.user)
-    data = [
-        {
+        return Response({'error': 'Acceso denegado'}, status=403)
+    
+    tramites = DocumentFlow.objects.filter(created_by=request.user).order_by('-created_at')
+    data = []
+    for t in tramites:
+        data.append({
             'id': t.id,
-            'titulo': t.nombre,
+            'folio': t.folio,                    # ← ESTO FALTABA
+            'titulo': t.nombre or "Sin título",
             'descripcion': t.descripcion,
-            'tipo': t.etapa,
+            'tipo': t.etapa or "General",
             'estado': t.status,
-            'fecha': t.created_at.strftime('%Y-%m-%d'),
-            'qr': t.folio,
-            'progreso': 25
-        } for t in tramites
-    ]
+            'fecha': t.created_at.strftime('%d/%m/%Y'),
+            'archivo': t.archivo.url if t.archivo else None,
+            'qr': t.folio  # ← Puedes dejarlo así o generar QR real
+        })
     return Response(data)
 
 @api_view(['POST'])
