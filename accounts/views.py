@@ -115,16 +115,20 @@ def solicitante_tramites_view(request):
 @parser_classes([MultiPartParser, FormParser])
 def solicitante_create_tramite(request):
     if request.user.role != 'solicitante':
-        return Response({'error': 'Acceso denegado solo para solicitantes'}, status=status.HTTP_403_FORBIDDEN)
+        return Response({'error': 'Acceso denegado'}, status=403)
+
     try:
         titulo = request.data.get('titulo', '').strip()
         tipo = request.data.get('tipo', '1')
         contenido = request.data.get('contenido', '').strip()
-        folio = request.data.get('folio', f"SOL-{request.user.id}-{timezone.now().strftime('%H%M%S')}")
 
         if not titulo or not contenido:
-            return Response({'error': 'Faltan título y descripción'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Faltan título o descripción'}, status=400)
 
+        # GENERA FOLIO EN BACKEND (NUNCA CONFIAR EN FRONTEND)
+        folio = f"SOL-{request.user.id}-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+
+        # Crea el trámite
         new_tramite = DocumentFlow.objects.create(
             nombre=titulo,
             descripcion=contenido,
@@ -134,18 +138,19 @@ def solicitante_create_tramite(request):
             status='Pendiente'
         )
 
+        # Manejo de archivo
         if 'archivo' in request.FILES:
-            archivo = request.FILES['archivo']
-            new_tramite.archivo = archivo
+            new_tramite.archivo = request.FILES['archivo']
             new_tramite.save()
 
         return Response({
             'message': 'Trámite creado exitosamente',
             'id': new_tramite.id,
             'folio': new_tramite.folio
-        })
+        }, status=201)
+
     except Exception as e:
-        return Response({'error': f'Error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'error': str(e)}, status=500)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
