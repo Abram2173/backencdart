@@ -13,18 +13,36 @@ from documents.models import DocumentFlow
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
-    serializer = LoginSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.validated_data['user']
-        token, _ = Token.objects.get_or_create(user=user)
-        role = user.role if user.role else user.detect_role_from_username()
-        return Response({
-            'token': token.key,
-            'role': role,
-            'user_id': user.id,
-            'full_name': user.full_name
-        })
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    email = request.data.get('email')
+    password = request.data.get('password')
+
+    if not email or not password:
+        return Response({'error': 'Faltan datos'}, status=400)
+
+    try:
+        user = User.objects.get(email__iexact=email)
+    except User.DoesNotExist:
+        return Response({'error': 'Credenciales incorrectas'}, status=400)
+
+    if not user.check_password(password):
+        return Response({'error': 'Credenciales incorrectas'}, status=400)
+
+    if not user.is_active:
+        return Response({'error': 'Cuenta desactivada'}, status=400)
+
+    if not user.is_approved:
+        return Response({'detail': 'Tu cuenta está pendiente de aprobación'}, status=403)
+
+    token, _ = Token.objects.get_or_create(user=user)
+    role = user.role if user.role else user.detect_role_from_username()
+
+    return Response({
+        'token': token.key,
+        'role': role,
+        'user_id': user.id,
+        'full_name': user.full_name or user.get_full_name(),
+        'email': user.email
+    })
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
