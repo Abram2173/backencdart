@@ -13,14 +13,19 @@ from documents.models import DocumentFlow
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
-    email = request.data.get('email')
+    # Acepta tanto "email" como "username"
+    email_or_username = request.data.get('email') or request.data.get('username')
     password = request.data.get('password')
 
-    if not email or not password:
+    if not email_or_username or not password:
         return Response({'error': 'Faltan datos'}, status=400)
 
+    # Busca por email o username
     try:
-        user = User.objects.get(email__iexact=email)
+        if '@' in email_or_username:
+            user = User.objects.get(email__iexact=email_or_username)
+        else:
+            user = User.objects.get(username=email_or_username)
     except User.DoesNotExist:
         return Response({'error': 'Credenciales incorrectas'}, status=400)
 
