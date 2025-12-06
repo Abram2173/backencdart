@@ -20,27 +20,21 @@ def login_view(request):
         return Response({'error': 'Faltan datos'}, status=400)
 
     try:
-        # Busca por email (exacto, sin importar mayúsculas)
         user = User.objects.get(email__iexact=email)
     except User.DoesNotExist:
         return Response({'error': 'Credenciales incorrectas'}, status=400)
 
-    # Verifica contraseña
     if not user.check_password(password):
         return Response({'error': 'Credenciales incorrectas'}, status=400)
 
-    # Verifica que esté activo y aprobado
     if not user.is_active:
         return Response({'error': 'Cuenta desactivada'}, status=400)
-    
+
     if not user.is_approved:
         return Response({'detail': 'Tu cuenta está pendiente de aprobación'}, status=403)
 
-    # Genera token
     token, _ = Token.objects.get_or_create(user=user)
-    
-    # Detecta rol (o usa el que ya tiene)
-    role = user.role if user.role else user.detect_role_from_username()
+    role = user.role if user.role else 'solicitante'
 
     return Response({
         'token': token.key,
