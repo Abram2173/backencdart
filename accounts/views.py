@@ -373,11 +373,11 @@ def gestor_catalogo(request):
 # Vista para jefes de departamento (aprobador con filtro por departamento)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def jefe_departamento_tramites(request):
-    if request.user.role != 'aprobador':
+def gestor_tramites_view(request):
+    if request.user.role != 'gestor':
         return Response({'error': 'Acceso denegado'}, status=403)
 
-    # Filtro por departamento del jefe
+    # FILTRO POR DEPARTAMENTO DEL JEFE
     dept = request.user.departamento
     mapping = {
         'becas': 'becas',
