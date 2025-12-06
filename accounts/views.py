@@ -369,6 +369,81 @@ def gestor_catalogo(request):
 
     return Response(data)
 
+
+# Vista para jefes de departamento (aprobador con filtro por departamento)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def jefe_departamento_tramites(request):
+    if request.user.role != 'aprobador':
+        return Response({'error': 'Acceso denegado'}, status=403)
+
+    # Filtro por departamento del jefe
+    dept = request.user.departamento
+    mapping = {
+        'becas': 'becas',
+        'inscripciones': 'inscripcion',
+        'servicios_escolares': ['calificaciones', 'documentos', 'inscripcion'],
+        'imss': 'seguridad_social',
+        'biblioteca': 'recursos',
+        'participacion': 'participacion',
+    }
+
+    categorias = mapping.get(dept, [])
+    if isinstance(categorias, list):
+        tramites = DocumentFlow.objects.filter(
+            etapa__in=categorias,
+            status='aprobado_aprobador'  # Solo los que ya aprobaron el primer jefe
+        ).order_by('-created_at')
+    else:
+        tramites = DocumentFlow.objects.filter(
+            etapa=categorias,
+            status='aprobado_aprobador'
+        ).order_by('-created_at')
+
+    data = [{
+        'id': t.id,
+        'folio': t.folio,
+        'titulo': t.nombre,
+        'estudiante': t.created_by.get_full_name() or t.created_by.username,
+        'fecha': t.created_at.strftime('%d/%m/%Y'),
+        'categoria': t.etapa
+    } for t in tramites]
+
+    return Response(data)
+
+# Vista para subdirector/director (visto bueno final)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def director_subdirector_tramites(request):
+    if request.user.role not in ['subdirector', 'director']:
+        return Response({'error': 'Acceso denegado'}, status=403)
+
+    # Subdirector ve Becas, Inscripción, Servicios, IMSS, Biblioteca
+    if request.user.role == 'subdirector':
+        tramites = DocumentFlow.objects.filter(
+            etapa__in=['becas', 'inscripcion', 'calificaciones', 'documentos', 'imss', 'biblioteca'],
+            status='aprobado_aprobador'
+        ).order_by('-created_at')
+    # Director ve Quejas y permisos
+    else:
+        tramites = DocumentFlow.objects.filter(
+            etapa='participacion',
+            status='aprobado_aprobador'
+        ).order_by('-created_at')
+
+    data = [{
+        'id': t.id,
+        'folio': t.folio,
+        'titulo': t.nombre,
+        'estudiante': t.created_by.get_full_name() or t.created_by.username,
+        'fecha': t.created_at.strftime('%d/%m/%Y')
+    } for t in tramites]
+
+    return Response(data)
+
+
+
+
 from .permissions import RolePermission
 
 # ← DIRECTOR (solo director)

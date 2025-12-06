@@ -2,7 +2,6 @@ from django.db import models
 from django.conf import settings
 
 class DocumentFlow(models.Model):
-    # QUITA LOS NÚMEROS Y PON TEXTOS LARGOS
     ETAPAS = [
         ('becas', 'Becas'),
         ('calendario', 'Calendario'),
@@ -14,9 +13,7 @@ class DocumentFlow(models.Model):
         ('participacion', 'Participación'),
     ]
     
-    # CAMBIA max_length=10 → max_length=20 (o más)
-    etapa = models.CharField(max_length=20, choices=ETAPAS, default='becas')
-    
+    etapa = models.CharField(max_length=20, choices=ETAPAS, default='becas')  # ← CAMBIA DE 10 A 20
     nombre = models.CharField(max_length=255)
     descripcion = models.TextField()
     folio = models.CharField(max_length=50, unique=True, blank=True)

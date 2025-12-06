@@ -7,9 +7,9 @@ class User(AbstractUser):
         ('aprobador', 'Aprobador'),
         ('auditor', 'Auditor'),
         ('gestor', 'Gestor Documental'),
-        ('coordinador', 'Coordinador'),      # ← NUEVO
-        ('subdirector', 'Subdirector'),      # ← NUEVO
-        ('director', 'Director'),            # ← NUEVO
+        ('coordinador', 'Coordinador'),
+        ('subdirector', 'Subdirector'),
+        ('director', 'Director'),
         ('admin', 'Admin'),
     ]
     
@@ -17,6 +17,22 @@ class User(AbstractUser):
     phone = models.CharField(max_length=20, blank=True)
     department = models.CharField(max_length=255, blank=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='solicitante')
+    
+    # ← NUEVO CAMPO PARA FILTRO DE JEFES
+    departamento = models.CharField(
+        max_length=30,
+        blank=True,
+        null=True,
+        choices=[
+            ('becas', 'Becas'),
+            ('inscripciones', 'Inscripciones'),
+            ('servicios_escolares', 'Servicios Escolares'),
+            ('imss', 'IMSS'),
+            ('biblioteca', 'Biblioteca'),
+            ('participacion', 'Participación'),
+        ]
+    )
+    
     is_approved = models.BooleanField(default=False)
     email = models.EmailField(unique=True)
 
