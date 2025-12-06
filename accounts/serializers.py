@@ -22,15 +22,19 @@ class RegisterSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate_email(self, value):
-        if not value.endswith('@instituto.edu.mx'):
-            raise serializers.ValidationError("Email institucional requerido")
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Email ya registrado")
-        return value
+        lower_email = value.lower().strip()
+        
+        if not (lower_email.endswith('@instituto.edu.mx') or lower_email.endswith('.tecnm.mx')):
+            raise serializers.ValidationError("Solo correos institucionales del TecNM")
+        
+        if User.objects.filter(email__iexact=lower_email).exists():
+            raise serializers.ValidationError("Este correo ya está registrado")
+        
+        return lower_email
 
     def validate(self, data):
         if data['password'] != data['confirm_password']:
-            raise serializers.ValidationError("Contraseñas no coinciden")
+            raise serializers.ValidationError("Las contraseñas no coinciden")
         return data
 
     def create(self, validated_data):
