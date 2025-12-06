@@ -38,4 +38,5 @@ urlpatterns = [
 
     path('jefe/tramites/', views.jefe_departamento_tramites, name='jefe_tramites'),
     path('direccion/tramites/', views.director_subdirector_tramites, name='direccion_tramites'),
+    
 ]

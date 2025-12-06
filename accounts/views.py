@@ -390,24 +390,17 @@ def jefe_departamento_tramites(request):
 
     categorias = mapping.get(dept, [])
     if isinstance(categorias, list):
-        tramites = DocumentFlow.objects.filter(
-            etapa__in=categorias,
-            status='aprobado_aprobador'  # Solo los que ya aprobaron el primer jefe
-        ).order_by('-created_at')
+        tramites = DocumentFlow.objects.filter(etapa__in=categorias, status='aprobado_aprobador')
     else:
-        tramites = DocumentFlow.objects.filter(
-            etapa=categorias,
-            status='aprobado_aprobador'
-        ).order_by('-created_at')
+        tramites = DocumentFlow.objects.filter(etapa=categorias, status='aprobado_aprobador')
 
     data = [{
         'id': t.id,
         'folio': t.folio,
         'titulo': t.nombre,
         'estudiante': t.created_by.get_full_name() or t.created_by.username,
-        'fecha': t.created_at.strftime('%d/%m/%Y'),
-        'categoria': t.etapa
-    } for t in tramites]
+        'fecha': t.created_at.strftime('%d/%m/%Y')
+    } for t in tramites.order_by('-created_at')]
 
     return Response(data)
 
