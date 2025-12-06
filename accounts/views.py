@@ -17,7 +17,7 @@ def login_view(request):
     password = request.data.get('password')
 
     if not email or not password:
-        return Response({'error': 'Faltan email o contraseña'}, status=400)
+        return Response({'error': 'Faltan datos'}, status=400)
 
     try:
         user = User.objects.get(email__iexact=email)
@@ -31,17 +31,18 @@ def login_view(request):
         return Response({'error': 'Cuenta desactivada'}, status=400)
 
     if not user.is_approved:
-        return Response({'detail': 'Tu cuenta está pendiente de aprobación'}, status=403)
+        return Response({'detail': 'Cuenta pendiente de aprobación'}, status=403)
 
     token, _ = Token.objects.get_or_create(user=user)
-    role = user.role if user.role else user.detect_role_from_username()
+    role = user.role if user.role else 'solicitante'
 
     return Response({
         'token': token.key,
         'role': role,
         'user_id': user.id,
         'full_name': user.full_name or user.get_full_name(),
-        'email': user.email
+        'email': user.email,
+        'departamento': user.departamento or ''
     })
 
 @api_view(['POST'])
