@@ -13,11 +13,11 @@ from documents.models import DocumentFlow
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
-    email = request.data.get('email')        # ← espera "email"
+    email = request.data.get('email')
     password = request.data.get('password')
 
     if not email or not password:
-        return Response({'error': 'Faltan datos'}, status=400)
+        return Response({'error': 'Faltan email o contraseña'}, status=400)
 
     try:
         user = User.objects.get(email__iexact=email)
@@ -31,7 +31,7 @@ def login_view(request):
         return Response({'error': 'Cuenta desactivada'}, status=400)
 
     if not user.is_approved:
-        return Response({'detail': 'Cuenta pendiente de aprobación'}, status=403)
+        return Response({'detail': 'Tu cuenta está pendiente de aprobación'}, status=403)
 
     token, _ = Token.objects.get_or_create(user=user)
     role = user.role if user.role else user.detect_role_from_username()
