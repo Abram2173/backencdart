@@ -36,10 +36,10 @@ class User(AbstractUser):
     is_approved = models.BooleanField(default=False)
     email = models.EmailField(unique=True)
 
-    def save(self, *args, **kwargs):
-        if self.email and not self.email.endswith('@instituto.edu.mx'):
-            raise ValueError("Email institucional requerido")
-        super().save(*args, **kwargs)
+def save(self, *args, **kwargs):
+    if self.email and not (self.email.endswith('@instituto.edu.mx') or self.email.endswith('.tecnm.mx')):
+        raise ValueError("Solo correos institucionales (@instituto.edu.mx o @*.tecnm.mx)")
+    super().save(*args, **kwargs)
 
     def detect_role_from_username(self):
         lower = self.username.lower()
