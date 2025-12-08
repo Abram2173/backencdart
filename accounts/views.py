@@ -397,9 +397,8 @@ def gestor_catalogo(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gestor_tramites_view(request):
-    print("=== VISTA NUEVA CARGADA ===")  # ← ESTE PRINT DEBE APARECER EN LOS LOGS DE RENDER
-    print("Usuario:", request.user.username, "Rol:", request.user.role, "Departamento:", request.user.departamento)
-
+    # ← MENSAJE ÚNICO PARA SABER QUE ES LA VERSIÓN NUEVA
+    # Si ves este mensaje en el frontend, es la versión correcta
     dept = request.user.departamento or ''
     dept_lower = dept.lower().strip()
 
@@ -414,7 +413,7 @@ def gestor_tramites_view(request):
 
     categorias = mapping.get(dept_lower, [])
     if not categorias:
-        return Response([], status=200)
+        return Response([], status=200)  # vacío si no tiene departamento
 
     if isinstance(categorias, list):
         tramites = DocumentFlow.objects.filter(etapa__in=categorias)
