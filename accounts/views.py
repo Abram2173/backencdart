@@ -398,11 +398,10 @@ def gestor_catalogo(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gestor_tramites_view(request):
-    # ← ACEPTA CUALQUIER ROL QUE TENGA DEPARTAMENTO (así no importa si es 'gestor' o 'Gestor Documental')
-    if not request.user.departamento:
-        return Response({'error': 'No tienes departamento asignado'}, status=403)
-
     dept = request.user.departamento
+    if not dept:
+        return Response([], status=200)  # ← LISTA VACÍA EN VEZ DE ERROR
+
     mapping = {
         'becas': 'becas',
         'inscripciones': 'inscripcion',
@@ -427,6 +426,8 @@ def gestor_tramites_view(request):
     } for t in tramites.order_by('-created_at')]
 
     return Response(data)
+
+
 
 # Vista para subdirector/director (visto bueno final)
 @api_view(['GET'])
