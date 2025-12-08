@@ -393,40 +393,12 @@ def gestor_catalogo(request):
 
     return Response(data)
 
-
+# ← VISTA NUEVA Y SIMPLE (reemplaza la vieja gestor_tramites_view)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def gestor_tramites_view(request):
-    # Toma el departamento del usuario logueado
-    dept = request.user.departamento
-    if not dept:
-        return Response([], status=200)  # vacío si no tiene departamento
-
-    # Normaliza para que coincida siempre
-    dept_lower = dept.lower().strip()
-
-    # Mapping de departamentos a etapas
-    mapping = {
-        'becas': 'becas',
-        'inscripciones': 'inscripcion',
-        'servicios_escolares': ['calificaciones', 'documentos', 'inscripcion'],
-        'imss': 'seguridad_social',
-        'biblioteca': 'recursos',
-        'participacion': 'participacion',
-    }
-
-    categorias = mapping.get(dept_lower, [])
-    if not categorias:
-        return Response([], status=200)
-
-    # Filtra por etapa
-    if isinstance(categorias, list):
-        tramites = DocumentFlow.objects.filter(etapa__in=categorias)
-    else:
-        tramites = DocumentFlow.objects.filter(etapa=categorias)
-
-    # Solo trámites aprobados por el aprobador (para que lleguen al jefe)
-    tramites = tramites.filter(status='Aprobado')  # o el status que uses
+def tramites_aprobados_view(request):
+    # Devuelve TODOS los trámites aprobados por el aprobador
+    tramites = DocumentFlow.objects.filter(status='Aprobado').order_by('-created_at')
 
     data = [
         {
@@ -434,13 +406,13 @@ def gestor_tramites_view(request):
             'folio': t.folio,
             'titulo': t.nombre,
             'estudiante': t.created_by.get_full_name() or t.created_by.username,
-            'fecha': t.created_at.strftime('%d/%m/%Y')
+            'fecha': t.created_at.strftime('%d/%m/%Y'),
+            'etapa': t.etapa  # ← importante: devuelve la categoría para filtrar en frontend
         }
-        for t in tramites.order_by('-created_at')
+        for t in tramites
     ]
 
     return Response(data)
-
 
 # Vista para subdirector/director (visto bueno final)
 @api_view(['GET'])
