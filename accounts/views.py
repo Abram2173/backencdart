@@ -398,13 +398,12 @@ def gestor_catalogo(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gestor_tramites_view(request):
-    # ← ACEPTA EL ROL EXACTO QUE TIENES EN LA BASE DE DATOS
-    if request.user.role != 'Gestor Documental':
+    if request.user.role != 'gestor':
         return Response({'error': 'Acceso denegado'}, status=403)
 
     dept = request.user.departamento
     if not dept:
-        return Response({'error': 'No tienes departamento asignado'}, status=403)
+        return Response([], status=200)  # ← DEVUELVE LISTA VACÍA EN VEZ DE ERROR
 
     mapping = {
         'becas': 'becas',
