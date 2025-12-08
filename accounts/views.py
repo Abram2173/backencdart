@@ -394,17 +394,16 @@ def gestor_catalogo(request):
     return Response(data)
 
 
-# Vista para jefes de departamento (aprobador con filtro por departamento)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gestor_tramites_view(request):
-    # ACEPTA EL ROL "gestor" (el que tienes en la base de datos)
-    if request.user.role != 'gestor':
-        return Response([], status=200)  # Devuelve vacío si no es gestor
+    # Acepta tanto 'gestor' como 'Gestor Documental'
+    if request.user.role not in ['gestor', 'Gestor Documental']:
+        return Response([], status=200)
 
     dept = request.user.departamento
     if not dept:
-        return Response([], status=200)  # Devuelve vacío si no tiene departamento
+        return Response([], status=200)
 
     mapping = {
         'becas': 'becas',
