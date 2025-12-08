@@ -37,7 +37,5 @@ urlpatterns = [
     path('administrador/', views.admin_view),
 
     path('direccion/tramites/', views.director_subdirector_tramites, name='direccion_tramites'),
-
-    path('tramites/aprobados/', views.tramites_aprobados_view, name='tramites_aprobados'),
-    
+    path('aprobados/', views.tramites_aprobados_view, name='tramites_aprobados'),
 ]

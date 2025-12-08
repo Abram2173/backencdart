@@ -12,6 +12,7 @@ urlpatterns = [
     path('api/auditor/', include('accounts.urls')),  # Auditor: kpis, reportes, bitacora
     path('api/documents/', include('documents.urls')),  # Flows
     path('api/gestor/', include('accounts.urls')),  # ← PARA EL JEFE DE DEPARTAMENTO
+    path('api/tramites/', include('accounts.urls')),  # ← ESTA LÍNEA FALTABA
 ]
 
 if settings.DEBUG:
