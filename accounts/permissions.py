@@ -1,5 +1,6 @@
 # accounts/permissions.py
 from rest_framework.permissions import BasePermission
+from .models import User  # ← Esta línea te falta
 
 class RolePermission(BasePermission):
     """
@@ -9,4 +10,10 @@ class RolePermission(BasePermission):
         self.allowed_roles = allowed_roles
 
     def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.role in self.allowed_roles
+        if not request.user.is_authenticated:
+            return False
+        
+        user_role = request.user.role
+        
+        # Acepta tanto la clave ('gestor') como el texto ('Gestor Documental')
+        return user_role in self.allowed_roles or user_role in [choice[1] for choice in User.ROLE_CHOICES if choice[0] in self.allowed_roles]
