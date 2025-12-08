@@ -11,6 +11,7 @@ urlpatterns = [
     path('api/aprobador/', include('accounts.urls')),  # Aprobador: pendientes, historial, bitacora
     path('api/auditor/', include('accounts.urls')),  # Auditor: kpis, reportes, bitacora
     path('api/documents/', include('documents.urls')),  # Flows
+    path('api/gestor/', include('accounts.urls')),  # ← PARA EL JEFE DE DEPARTAMENTO
 ]
 
 if settings.DEBUG:
