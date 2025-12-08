@@ -435,8 +435,7 @@ def gestor_tramites_view(request):
     ]
 
     # ← MENSAJE ÚNICO PARA CONFIRMAR EN FRONTEND
-    return Response({"version_nueva": True, "tramites": data})
-
+    return Response({"mensaje": "VERSIÓN NUEVA FUNCIONANDO", "tramites": []})
 
 
 # Vista para subdirector/director (visto bueno final)
