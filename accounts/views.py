@@ -398,9 +398,10 @@ def gestor_catalogo(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gestor_tramites_view(request):
-    dept = request.user.departamento
-    if not dept:
-        return Response([], status=200)  # ← LISTA VACÍA EN VEZ DE ERROR
+    # ← NO REVISA ROL NI DEPARTAMENTO → solo que esté autenticado
+    # Así nunca da 403 por configuración
+
+    dept = request.user.departamento or ''  # si no tiene, usa vacío
 
     mapping = {
         'becas': 'becas',
@@ -412,6 +413,9 @@ def gestor_tramites_view(request):
     }
 
     categorias = mapping.get(dept, [])
+    if not categorias:
+        return Response([], status=200)  # ← lista vacía si no tiene departamento
+
     if isinstance(categorias, list):
         tramites = DocumentFlow.objects.filter(etapa__in=categorias)
     else:
