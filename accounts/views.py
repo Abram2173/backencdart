@@ -397,17 +397,8 @@ def gestor_catalogo(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gestor_tramites_view(request):
-    user_role = request.user.role
-
-    # ACEPTA AMBOS: la clave 'gestor' y el texto 'Gestor Documental'
-    if user_role not in ['gestor', 'Gestor Documental']:
-        return Response([], status=200)
-
-    dept = request.user.departamento
-    if not dept:
-        return Response([], status=200)
-
-    # Normaliza departamento a minúsculas
+    # SIN REVISAR ROL NI DEPARTAMENTO → solo que esté logueado
+    dept = request.user.departamento or ''  # si no tiene, vacío
     dept_lower = dept.lower().strip()
 
     mapping = {
@@ -421,20 +412,23 @@ def gestor_tramites_view(request):
 
     categorias = mapping.get(dept_lower, [])
     if not categorias:
-        return Response([], status=200)
+        return Response([], status=200)  # vacío si no coincide departamento
 
     if isinstance(categorias, list):
         tramites = DocumentFlow.objects.filter(etapa__in=categorias)
     else:
         tramites = DocumentFlow.objects.filter(etapa=categorias)
 
-    data = [{
-        'id': t.id,
-        'folio': t.folio,
-        'titulo': t.nombre,
-        'estudiante': t.created_by.get_full_name() or t.created_by.username,
-        'fecha': t.created_at.strftime('%d/%m/%Y')
-    } for t in tramites.order_by('-created_at')]
+    data = [
+        {
+            'id': t.id,
+            'folio': t.folio,
+            'titulo': t.nombre,
+            'estudiante': t.created_by.get_full_name() or t.created_by.username,
+            'fecha': t.created_at.strftime('%d/%m/%Y')
+        }
+        for t in tramites.order_by('-created_at')
+    ]
 
     return Response(data)
 
