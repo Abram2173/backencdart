@@ -397,6 +397,9 @@ def gestor_catalogo(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gestor_tramites_view(request):
+    print("=== VISTA NUEVA CARGADA ===")  # ← ESTE PRINT DEBE APARECER EN LOS LOGS DE RENDER
+    print("Usuario:", request.user.username, "Rol:", request.user.role, "Departamento:", request.user.departamento)
+
     dept = request.user.departamento or ''
     dept_lower = dept.lower().strip()
 
