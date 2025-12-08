@@ -398,11 +398,14 @@ def gestor_catalogo(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gestor_tramites_view(request):
-    if request.user.role != 'gestor':
+    # ← CAMBIA 'gestor' POR EL ROL QUE TIENES EN LA CUENTA
+    if request.user.role not in ['gestor', 'Gestor Documental', 'aprobador']:
         return Response({'error': 'Acceso denegado'}, status=403)
 
-    # FILTRO POR DEPARTAMENTO DEL JEFE
     dept = request.user.departamento
+    if not dept:
+        return Response({'error': 'No tienes departamento asignado'}, status=403)
+
     mapping = {
         'becas': 'becas',
         'inscripciones': 'inscripcion',
@@ -414,9 +417,9 @@ def gestor_tramites_view(request):
 
     categorias = mapping.get(dept, [])
     if isinstance(categorias, list):
-        tramites = DocumentFlow.objects.filter(etapa__in=categorias, status='aprobado_aprobador')
+        tramites = DocumentFlow.objects.filter(etapa__in=categorias)
     else:
-        tramites = DocumentFlow.objects.filter(etapa=categorias, status='aprobado_aprobador')
+        tramites = DocumentFlow.objects.filter(etapa=categorias)
 
     data = [{
         'id': t.id,
