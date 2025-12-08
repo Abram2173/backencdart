@@ -457,10 +457,10 @@ def director_subdirector_tramites(request):
 def confirmar_entrega_view(request, pk):
     try:
         tramite = DocumentFlow.objects.get(id=pk)
-        # Aquí pones el status que quieras cuando se confirma entrega
+        # Cambia el status a lo que quieras cuando se confirma entrega
         tramite.status = 'Entregado'  # o 'Finalizado', 'Completado', etc.
         tramite.save()
-        return Response({'message': 'Entrega confirmada'}, status=200)
+        return Response({'message': 'Entrega confirmada correctamente'}, status=200)
     except DocumentFlow.DoesNotExist:
         return Response({'error': 'Trámite no encontrado'}, status=404)
 
