@@ -405,8 +405,8 @@ def gestor_catalogo(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def tramites_aprobados_view(request):
-    # Devuelve TODOS los trámites aprobados por el aprobador
-    tramites = DocumentFlow.objects.filter(status='Aprobado').order_by('-created_at')
+    # ← DEVUELVE APROBADOS Y ENTREGADOS
+    tramites = DocumentFlow.objects.filter(status__in=['Aprobado', 'Entregado']).order_by('-created_at')
 
     data = [
         {
@@ -415,7 +415,8 @@ def tramites_aprobados_view(request):
             'titulo': t.nombre,
             'estudiante': t.created_by.get_full_name() or t.created_by.username,
             'fecha': t.created_at.strftime('%d/%m/%Y'),
-            'etapa': t.etapa  # ← importante: devuelve la categoría para filtrar en frontend
+            'etapa': t.etapa,
+            'status': t.status  # ← importante para filtrar en frontend
         }
         for t in tramites
     ]
