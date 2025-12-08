@@ -38,5 +38,5 @@ urlpatterns = [
 
     path('direccion/tramites/', views.director_subdirector_tramites, name='direccion_tramites'),
     path('aprobados/', views.tramites_aprobados_view, name='tramites_aprobados'),
-    path('gestor/confirmar/<int:pk>/', views.confirmar_entrega_view, name='confirmar_entrega'),
+    path('confirmar/<int:pk>/', views.confirmar_entrega_view, name='confirmar_entrega'),
 ]
