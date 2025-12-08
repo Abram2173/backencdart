@@ -397,13 +397,16 @@ def gestor_catalogo(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gestor_tramites_view(request):
-    # Acepta tanto 'gestor' como 'Gestor Documental'
-    if request.user.role not in ['gestor', 'Gestor Documental']:
-        return Response([], status=200)
+    # Acepta el rol 'gestor' (la clave que se guarda)
+    if request.user.role != 'gestor':
+        return Response([], status=200)  # Devuelve vacío si no es gestor
 
     dept = request.user.departamento
     if not dept:
-        return Response([], status=200)
+        return Response([], status=200)  # Devuelve vacío si no tiene departamento
+
+    # Normaliza el departamento a minúsculas para que coincida con el mapping
+    dept_lower = dept.lower()
 
     mapping = {
         'becas': 'becas',
@@ -414,7 +417,7 @@ def gestor_tramites_view(request):
         'participacion': 'participacion',
     }
 
-    categorias = mapping.get(dept, [])
+    categorias = mapping.get(dept_lower, [])
     if not categorias:
         return Response([], status=200)
 
