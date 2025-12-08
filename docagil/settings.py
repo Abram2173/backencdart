@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+from corsheaders.defaults import default_headers
 from pathlib import Path
 import os
 
@@ -111,6 +112,8 @@ CORS_ALLOWED_ORIGINS = [
     ]
 CORS_ALLOW_CREDENTIALS = True
 
+
+
 # User custom
 AUTH_USER_MODEL = 'accounts.User'
 
@@ -150,3 +153,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'authorization',  # ← PARA QUE ACEPTE EL TOKEN
+]
