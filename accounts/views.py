@@ -397,8 +397,7 @@ def gestor_catalogo(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gestor_tramites_view(request):
-    # SIN REVISAR ROL NI DEPARTAMENTO → solo que esté logueado
-    dept = request.user.departamento or ''  # si no tiene, vacío
+    dept = request.user.departamento or ''
     dept_lower = dept.lower().strip()
 
     mapping = {
@@ -412,7 +411,7 @@ def gestor_tramites_view(request):
 
     categorias = mapping.get(dept_lower, [])
     if not categorias:
-        return Response([], status=200)  # vacío si no coincide departamento
+        return Response([], status=200)
 
     if isinstance(categorias, list):
         tramites = DocumentFlow.objects.filter(etapa__in=categorias)
