@@ -397,8 +397,11 @@ def gestor_catalogo(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gestor_tramites_view(request):
-    # ← MENSAJE ÚNICO PARA SABER QUE ES LA VERSIÓN NUEVA
-    # Si ves este mensaje en el frontend, es la versión correcta
+    # ← ESTE MENSAJE ÚNICO CONFIRMA QUE ES LA VERSIÓN NUEVA
+    # Si ves este mensaje en la consola del frontend, es la versión correcta
+    print("=== VERSIÓN NUEVA DE GESTOR_TRAMITES_VIEW CARGADA ===")
+    print("Usuario:", request.user.username, "Rol:", request.user.role, "Departamento:", request.user.departamento)
+
     dept = request.user.departamento or ''
     dept_lower = dept.lower().strip()
 
@@ -413,7 +416,7 @@ def gestor_tramites_view(request):
 
     categorias = mapping.get(dept_lower, [])
     if not categorias:
-        return Response([], status=200)  # vacío si no tiene departamento
+        return Response([], status=200)
 
     if isinstance(categorias, list):
         tramites = DocumentFlow.objects.filter(etapa__in=categorias)
@@ -431,7 +434,8 @@ def gestor_tramites_view(request):
         for t in tramites.order_by('-created_at')
     ]
 
-    return Response(data)
+    # ← MENSAJE ÚNICO PARA CONFIRMAR EN FRONTEND
+    return Response({"version_nueva": True, "tramites": data})
 
 
 
