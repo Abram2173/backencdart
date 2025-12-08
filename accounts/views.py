@@ -397,11 +397,15 @@ def gestor_catalogo(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gestor_tramites_view(request):
-    # ← ESTE MENSAJE ÚNICO CONFIRMA QUE ES LA VERSIÓN NUEVA
-    # Si ves esto en la consola del frontend, Render ya tomó el cambio
-    dept = request.user.departamento or ''
+    # Toma el departamento del usuario logueado
+    dept = request.user.departamento
+    if not dept:
+        return Response([], status=200)  # vacío si no tiene departamento
+
+    # Normaliza para que coincida siempre
     dept_lower = dept.lower().strip()
 
+    # Mapping de departamentos a etapas
     mapping = {
         'becas': 'becas',
         'inscripciones': 'inscripcion',
@@ -415,10 +419,14 @@ def gestor_tramites_view(request):
     if not categorias:
         return Response([], status=200)
 
+    # Filtra por etapa
     if isinstance(categorias, list):
         tramites = DocumentFlow.objects.filter(etapa__in=categorias)
     else:
         tramites = DocumentFlow.objects.filter(etapa=categorias)
+
+    # Solo trámites aprobados por el aprobador (para que lleguen al jefe)
+    tramites = tramites.filter(status='Aprobado')  # o el status que uses
 
     data = [
         {
@@ -431,8 +439,7 @@ def gestor_tramites_view(request):
         for t in tramites.order_by('-created_at')
     ]
 
-    # ← MENSAJE ÚNICO PARA CONFIRMAR
-    return Response({"nueva_version": "SI", "tramites": data})
+    return Response(data)
 
 
 # Vista para subdirector/director (visto bueno final)
