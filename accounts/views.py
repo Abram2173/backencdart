@@ -398,12 +398,14 @@ def gestor_catalogo(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gestor_tramites_view(request):
-    if request.user.role != 'gestor':
+
+    # PERMITIR gestor (documental) Y coordinador (jefe de departamento)
+    if request.user.role not in ['gestor', 'coordinador']:
         return Response({'error': 'Acceso denegado'}, status=403)
 
     dept = request.user.departamento
     if not dept:
-        return Response([], status=200)  # ← DEVUELVE LISTA VACÍA EN VEZ DE ERROR
+        return Response([], status=200)
 
     mapping = {
         'becas': 'becas',
@@ -415,6 +417,7 @@ def gestor_tramites_view(request):
     }
 
     categorias = mapping.get(dept, [])
+
     if isinstance(categorias, list):
         tramites = DocumentFlow.objects.filter(etapa__in=categorias)
     else:
@@ -429,6 +432,7 @@ def gestor_tramites_view(request):
     } for t in tramites.order_by('-created_at')]
 
     return Response(data)
+
 
 # Vista para subdirector/director (visto bueno final)
 @api_view(['GET'])
