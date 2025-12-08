@@ -398,10 +398,7 @@ def gestor_catalogo(request):
 @permission_classes([IsAuthenticated])
 def gestor_tramites_view(request):
     # ← ESTE MENSAJE ÚNICO CONFIRMA QUE ES LA VERSIÓN NUEVA
-    # Si ves este mensaje en la consola del frontend, es la versión correcta
-    print("=== VERSIÓN NUEVA DE GESTOR_TRAMITES_VIEW CARGADA ===")
-    print("Usuario:", request.user.username, "Rol:", request.user.role, "Departamento:", request.user.departamento)
-
+    # Si ves esto en la consola del frontend, Render ya tomó el cambio
     dept = request.user.departamento or ''
     dept_lower = dept.lower().strip()
 
@@ -434,8 +431,8 @@ def gestor_tramites_view(request):
         for t in tramites.order_by('-created_at')
     ]
 
-    # ← MENSAJE ÚNICO PARA CONFIRMAR EN FRONTEND
-    return Response({"mensaje": "VERSIÓN NUEVA FUNCIONANDO", "tramites": []})
+    # ← MENSAJE ÚNICO PARA CONFIRMAR
+    return Response({"nueva_version": "SI", "tramites": data})
 
 
 # Vista para subdirector/director (visto bueno final)
