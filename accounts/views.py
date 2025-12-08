@@ -398,8 +398,8 @@ def gestor_catalogo(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gestor_tramites_view(request):
-    # ← CAMBIA 'gestor' POR EL ROL QUE TIENES EN LA CUENTA
-    if request.user.role not in ['gestor', 'Gestor Documental', 'aprobador']:
+    # ← ACEPTA EL ROL EXACTO QUE TIENES EN LA BASE DE DATOS
+    if request.user.role != 'Gestor Documental':
         return Response({'error': 'Acceso denegado'}, status=403)
 
     dept = request.user.departamento
