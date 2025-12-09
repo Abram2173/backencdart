@@ -60,11 +60,9 @@ def login_view(request):
 
     return Response({
         'token': token.key,
-        'role': role,  # ← DEVUELVE EL ROL
-        'departamento': departamento,  # ← DEVUELVE EL DEPARTAMENTO (para jefes)
-        'user_id': user.id,
-        'full_name': user.full_name or user.get_full_name(),
-        'email': user.email,
+        'role': role,                                    # código corto: 'gestor', 'director', etc.
+        'departamento': departamento,                    # departamento del jefe o vacío
+        'full_name': user.get_full_name() or user.username
     })
 
 
