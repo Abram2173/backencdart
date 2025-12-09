@@ -10,6 +10,20 @@ from .serializers import LoginSerializer, RegisterSerializer
 from .models import User
 from documents.models import DocumentFlow
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_role_view(request):
+    """
+    Devuelve el rol y departamento del usuario logueado
+    """
+    user = request.user
+    data = {
+        'role': user.role,  # el rol que tienes en el modelo User
+        'departamento': user.departamento or "",  # el departamento del jefe
+        'full_name': user.get_full_name() or user.username
+    }
+    return Response(data)
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
@@ -39,16 +53,20 @@ def login_view(request):
         return Response({'detail': 'Tu cuenta está pendiente de aprobación'}, status=403)
 
     token, _ = Token.objects.get_or_create(user=user)
+
+    # ← AQUÍ ESTÁ LA PARTE QUE TE FALTABA
     role = user.role if user.role else 'solicitante'
+    departamento = user.departamento or ""
 
     return Response({
         'token': token.key,
-        'role': role,
+        'role': role,  # ← DEVUELVE EL ROL
+        'departamento': departamento,  # ← DEVUELVE EL DEPARTAMENTO (para jefes)
         'user_id': user.id,
         'full_name': user.full_name or user.get_full_name(),
         'email': user.email,
-        'departamento': user.departamento or ''
     })
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
