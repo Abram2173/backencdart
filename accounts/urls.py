@@ -41,4 +41,6 @@ urlpatterns = [
     path('confirmar/<int:pk>/', views.confirmar_entrega_view, name='confirmar_entrega'),
 
     path('user/role/', views.user_role_view, name='user_role'),
+
+    path('solicitante/cancelar/<int:pk>/', views.cancelar_tramite_estudiante, name='cancelar_tramite_estudiante'),
 ]

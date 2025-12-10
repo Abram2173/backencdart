@@ -21,6 +21,8 @@ class DocumentFlow(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     archivo = models.FileField(upload_to='tramites/', blank=True, null=True)
+    cancelado_por_estudiante = models.BooleanField(default=False, verbose_name="Cancelado por estudiante")
+    fecha_cancelacion = models.DateTimeField(null=True, blank=True, verbose_name="Fecha de cancelación")
 
     def save(self, *args, **kwargs):
         if not self.folio:

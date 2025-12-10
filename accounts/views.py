@@ -67,6 +67,26 @@ def login_view(request):
         'email': user.email,
     })
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cancelar_tramite_estudiante(request, pk):
+    try:
+        tramite = DocumentFlow.objects.get(pk=pk, created_by=request.user)
+        
+        if tramite.cancelado_por_estudiante:
+            return Response({"error": "Este trámite ya fue cancelado"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if tramite.status in ["Entregado", "Aprobado"]:
+            return Response({"error": "No puedes cancelar un trámite ya procesado"}, status=status.HTTP_400_BAD_REQUEST)
+
+        tramite.cancelado_por_estudiante = True
+        tramite.fecha_cancelacion = timezone.now()
+        tramite.save()
+
+        return Response({"message": "Trámite cancelado correctamente"}, status=status.HTTP_200_OK)
+    
+    except DocumentFlow.DoesNotExist:
+        return Response({"error": "Trámite no encontrado o no te pertenece"}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
