@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'corsheaders',             # Para conectar con React
     'accounts',                # Tu app de usuarios
     'documents',               # Tu app de docs
+    'social_django',                    # ← ESTO ES LO QUE FALTABA
+    'social_core',
 ]
 
 MIDDLEWARE = [
@@ -158,3 +160,20 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 CORS_ALLOW_HEADERS = list(default_headers) + [
     'authorization',  # ← PARA QUE ACEPTE EL TOKEN
 ]
+
+SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_KEY = '4d5ff0d-f74b-46cd-88ea-5408df16e4fd'
+SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = 'YBB8Q~JCft8nJGhRLIKvil_-1PQ6x.wZyuo9kbLE'
+SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID = 'b25de60b-7819-429c-b742-9771eb22587f'
+
+
+AUTHENTICATION_BACKENDS = [
+    'social_core.backends.azuread_tenant.AzureADTenantOAuth2',  # ← AZURE AD
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# Redirecciones después del login
+LOGIN_REDIRECT_URL = '/select-role'      # o donde quieras que entre
+LOGOUT_REDIRECT_URL = '/'
+
+# Esto evita errores de estado
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
