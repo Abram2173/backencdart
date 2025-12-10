@@ -177,4 +177,4 @@ LOGIN_REDIRECT_URL = '/select-role'      # o donde quieras que entre
 LOGOUT_REDIRECT_URL = '/'
 
 # Esto evita errores de estado
-SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = True 
