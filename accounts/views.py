@@ -1,6 +1,4 @@
-import secrets
-from django.shortcuts import redirect
-from social_django.utils import psa  # ← ESTE ES EL IMPORT QUE FALTABA
+import random
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -12,6 +10,10 @@ from django.utils import timezone
 from .serializers import LoginSerializer, RegisterSerializer
 from .models import User
 from documents.models import DocumentFlow
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+import random, string
+from django.core.mail import send_mail
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -116,46 +118,48 @@ def register_view(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-@psa('social:complete')  # ← Ahora sí funciona
-def azure_login_complete(request, backend):
-    """
-    Vista que se llama después del login con Microsoft
-    """
-    if request.user.is_authenticated:
-        # Guarda datos si quieres (opcional)
-        # request.session['full_name'] = request.user.get_full_name()
+@permission_classes([AllowAny])
+def microsoft_callback(request):
+    code = request.GET.get('code')
+    state = request.GET.get('state')
+    
+    if state != 'tecn2025':  # Verifica el state para seguridad
+        return Response({"error": "State inválido"}, status=400)
+    
+    if code:
+        # Aquí validas el code con Microsoft (usa requests-oauthlib o similar)
+        # Por simplicidad, simulamos el usuario
+        username = code[:10]  # Simula número de control
+        password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
         
-        # ← REDIRIGE A TU PÁGINA BONITA
-        return redirect("https://abram2173.github.io/docagilsw/microsoft-success")
-        # ↑ Cambia por tu URL real si usas Vercel o otra
-
-    # Si falla el login
-    return redirect("https://abram2173.github.io/docagilsw/auth?error=1")
-
-
-@api_view(['GET'])
-def azure_callback(request):
-    # El login se maneja con social_django
-    user = request.user
-    if user.is_authenticated:
-        # Genera contraseña aleatoria
-        password = secrets.token_urlsafe(12)
-        user.set_password(password)
-        user.save()
-
-        # Envía correo (opcional, usa tu función de email)
-        # from django.core.mail import send_mail
-        # send_mail('Tu contraseña para Dart', f'Tu contraseña es: {password}', 'no-reply@tecn.mx', [user.email])
-
-        return Response({
-            "message": "Login exitoso",
-            "password": password,
-            "full_name": user.full_name,
-            "email": user.email,
-            "username": user.username
-        })
-    else:
-        return Response({"error": "Login fallido"}, status=401)
+        user, created = User.objects.get_or_create(
+            username=username,
+            defaults={
+                'email': f"{username}@matehuala.tecnm.mx",
+                'full_name': f"Estudiante {username}",
+                'role': 'solicitante'
+            }
+        )
+        
+        if created:
+            user.set_password(password)
+            user.save()
+            
+            # Envía correo con contraseña
+            send_mail(
+                'Tu contraseña para Dart',
+                f'Tu número de control: {username}\nTu contraseña: {password}',
+                'no-reply@tecn.mx',
+                [user.email],
+            )
+        
+        # Redirige al login con el usuario creado
+        request.session['temp_username'] = username
+        request.session['temp_password'] = password
+        
+        return HttpResponseRedirect(reverse('login') + f'?username={username}&password={password}')
+    
+    return Response({"error": "Código inválido"}, status=400)
 
 
 # Admin Views (intacto)
