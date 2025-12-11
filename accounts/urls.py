@@ -45,4 +45,5 @@ urlpatterns = [
     path('solicitante/cancelar/<int:pk>/', views.cancelar_tramite_estudiante, name='cancelar_tramite_estudiante'),
 
     path('auth/callback/', views.azure_callback, name='azure_callback'),
+    path('auth/complete/azuread-tenant-oauth2/', views.azure_login_complete, name='azure_complete'),
 ]

@@ -1,4 +1,6 @@
 import secrets
+from django.shortcuts import redirect
+from social_django.utils import psa  # ← ESTE ES EL IMPORT QUE FALTABA
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -112,6 +114,24 @@ def register_view(request):
             'user_id': user.id
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@psa('social:complete')  # ← Ahora sí funciona
+def azure_login_complete(request, backend):
+    """
+    Vista que se llama después del login con Microsoft
+    """
+    if request.user.is_authenticated:
+        # Guarda datos si quieres (opcional)
+        # request.session['full_name'] = request.user.get_full_name()
+        
+        # ← REDIRIGE A TU PÁGINA BONITA
+        return redirect("https://abram2173.github.io/docagilsw/microsoft-success")
+        # ↑ Cambia por tu URL real si usas Vercel o otra
+
+    # Si falla el login
+    return redirect("https://abram2173.github.io/docagilsw/auth?error=1")
+
 
 @api_view(['GET'])
 def azure_callback(request):
