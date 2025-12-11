@@ -163,18 +163,16 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 
 import os
 
-SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_KEY = os.environ.get('SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_KEY')
-SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = os.environ.get('SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET')
-SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID = os.environ.get('SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID')
-
 AUTHENTICATION_BACKENDS = [
-    'social_core.backends.azuread_tenant.AzureADTenantOAuth2',  # ← AZURE AD
+    'social_core.backends.azuread_tenant.AzureADTenantOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# Redirecciones después del login
-LOGIN_REDIRECT_URL = '/select-role'      # o donde quieras que entre
-LOGOUT_REDIRECT_URL = '/'
+# Tus datos de Azure (usa os.environ para producción)
+SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_KEY = os.environ.get('SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_KEY', '4d5ff0d-f74b-46cd-88ea-5408df16e4fd')
+SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = os.environ.get('SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET', 'YBB8Q~JCft8nJGhRLIKvil_-1PQ6x.wZyuo9kbLE')
+SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID = os.environ.get('SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID', 'b25de60b-7819-429c-b742-9771eb22587f')
 
-# Esto evita errores de estado
-SOCIAL_AUTH_REDIRECT_IS_HTTPS = True 
+LOGIN_REDIRECT_URL = '/select-role'
+LOGOUT_REDIRECT_URL = '/auth'
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = True

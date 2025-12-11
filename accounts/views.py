@@ -1,3 +1,4 @@
+import secrets
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -111,6 +112,31 @@ def register_view(request):
             'user_id': user.id
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def azure_callback(request):
+    # El login se maneja con social_django
+    user = request.user
+    if user.is_authenticated:
+        # Genera contraseña aleatoria
+        password = secrets.token_urlsafe(12)
+        user.set_password(password)
+        user.save()
+
+        # Envía correo (opcional, usa tu función de email)
+        # from django.core.mail import send_mail
+        # send_mail('Tu contraseña para Dart', f'Tu contraseña es: {password}', 'no-reply@tecn.mx', [user.email])
+
+        return Response({
+            "message": "Login exitoso",
+            "password": password,
+            "full_name": user.full_name,
+            "email": user.email,
+            "username": user.username
+        })
+    else:
+        return Response({"error": "Login fallido"}, status=401)
+
 
 # Admin Views (intacto)
 @api_view(['GET'])

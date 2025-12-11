@@ -43,4 +43,6 @@ urlpatterns = [
     path('user/role/', views.user_role_view, name='user_role'),
 
     path('solicitante/cancelar/<int:pk>/', views.cancelar_tramite_estudiante, name='cancelar_tramite_estudiante'),
+
+    path('auth/callback/', views.azure_callback, name='azure_callback'),
 ]
