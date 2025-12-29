@@ -15,6 +15,7 @@ from django.urls import reverse
 import random, string
 from django.core.mail import send_mail
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_role_view(request):
